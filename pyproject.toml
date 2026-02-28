@@ -13,5 +13,6 @@ dependencies = [
   "streamlit",
   "pydantic",
   "pydantic-settings",
+  "python-multipart",
   "pytest",
 ]
