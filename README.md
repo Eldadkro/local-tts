@@ -21,7 +21,13 @@ python3 -m pip install -e .
 uvicorn app.api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 3) Check health
+### 3) Start the Streamlit UI
+
+```bash
+streamlit run app/ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+```
+
+### 4) Check health
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -56,3 +62,19 @@ uvicorn app.api.main:app --host 127.0.0.1 --port 8000 --reload
 ```bash
 pytest -v
 ```
+
+## Run With Docker
+
+Build:
+
+```bash
+docker build -t local-tts:dev .
+```
+
+Run:
+
+```bash
+docker run --rm -p 8501:8501 -e TTS_DEVICE_MODE=cpu -e HF_MODEL_ID=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice local-tts:dev
+```
+
+Then open `http://localhost:8501`.

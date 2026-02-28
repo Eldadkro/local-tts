@@ -22,7 +22,7 @@ class ModelService:
         try:
             self._ensure_pipeline()
             return b"RIFF....WAVE"
-        except TimeoutError as exc:
-            raise RuntimeError("Synthesis timed out") from exc
+        except TimeoutError:
+            raise
         except Exception as exc:  # pragma: no cover
             raise RuntimeError("Synthesis failed") from exc

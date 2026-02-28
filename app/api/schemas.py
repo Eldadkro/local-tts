@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HealthResponse(BaseModel):
@@ -17,7 +17,7 @@ class CloneVoiceResponse(BaseModel):
 
 
 class SynthesizeRequest(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=20000)
     voice_mode: str
     voice_id: str | None = None
     cloned_voice_id: str | None = None
