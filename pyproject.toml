@@ -9,6 +9,10 @@ requires-python = ">=3.11"
 dependencies = [
   "fastapi",
   "httpx",
+  "qwen-tts",
+  "torch",
+  "soundfile",
+  # "flash-attn",
   "uvicorn",
   "streamlit",
   "pydantic",
