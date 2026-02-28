@@ -1,1 +1,12 @@
 .worktrees/
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+
+# Local packaging artifacts
+*.egg-info/
+
+# Test and environment artifacts
+.pytest_cache/
+.venv/
