@@ -1,5 +1,5 @@
 # Start from an Ubuntu 24.04 CUDA runtime image with cuDNN support for GPU inference.
-FROM nvidia/cuda:12.6.0-cudnn-runtime-ubuntu24.04
+FROM nvidia/cuda:12.6.0-cudnn-runtime-ubuntu24.04 AS base
 
 # Disable interactive Debian package prompts during image builds.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,8 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 # Make Python log output unbuffered so container logs appear immediately.
 ENV PYTHONUNBUFFERED=1
-# Tell the app to prefer GPU execution.
-ENV TTS_DEVICE_MODE=gpu
+# Default to automatic device selection and a persistent on-disk model cache.
+ENV TTS_DEVICE_MODE=auto
+ENV HF_HOME=/app/model
+ENV PRELOAD_MODEL_ON_STARTUP=1
 # Expose all visible NVIDIA GPUs to the container.
 ENV NVIDIA_VISIBLE_DEVICES=all
 # Request compute and utility NVIDIA driver capabilities inside the container.
@@ -40,6 +42,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Set the working directory for all following Docker instructions.
 WORKDIR /app
 
+# Ensure the bind-mounted model cache location exists.
+RUN mkdir -p /app/model
+
 # Upgrade base Python packaging tools before installing project dependencies.
 RUN python -m pip install --upgrade pip setuptools wheel
 
@@ -61,5 +66,12 @@ RUN python -m pip install --no-cache-dir .
 # Document the API and web UI ports exposed by the container.
 EXPOSE 8000 8501
 
+FROM base AS prod
+
 # Start Supervisor so it can manage the container's long-running processes.
 CMD ["/usr/bin/supervisord", "-c", "/app/docker/supervisord.conf"]
+
+FROM base AS dev
+
+# Keep the development container idle until services are started manually.
+CMD ["sleep", "infinity"]

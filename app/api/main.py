@@ -16,7 +16,8 @@ model_service = ModelService()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    model_service.preload()
+    if settings.preload_model_on_startup:
+        model_service.preload()
     yield
 
 

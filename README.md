@@ -65,16 +65,47 @@ pytest -v
 
 ## Run With Docker
 
-Build:
+Create the local model cache directory once:
 
 ```bash
-docker build -t local-tts:dev .
+mkdir -p model
 ```
 
-Run:
+Build the images:
 
 ```bash
-docker run --rm -p 8501:8501 -e TTS_DEVICE_MODE=cpu -e HF_MODEL_ID=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice local-tts:dev
+docker compose build prod dev
+```
+
+Warm the local Hugging Face cache under `./model` without starting the app:
+
+```bash
+docker compose run --rm warm-model
+```
+
+Start the production container (auto-starts API and UI):
+
+```bash
+docker compose up prod
 ```
 
 Then open `http://localhost:8501`.
+
+Start a development container with the same environment, but no services started by default:
+
+```bash
+docker compose run --rm dev bash
+```
+
+Inside the dev container, start the services only when you want them:
+
+```bash
+./runner_api.sh
+./runner_client.sh
+```
+
+Both `prod` and `dev` mount the same local cache path:
+
+```text
+./model:/app/model
+```

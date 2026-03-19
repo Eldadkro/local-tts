@@ -26,3 +26,18 @@ def test_app_startup_preloads_model(monkeypatch) -> None:
         pass
 
     assert calls["count"] == 1
+
+
+def test_app_startup_skips_preload_when_disabled(monkeypatch) -> None:
+    calls = {"count": 0}
+
+    def _fake_preload() -> None:
+        calls["count"] += 1
+
+    monkeypatch.setattr(api_main.settings, "preload_model_on_startup", False)
+    monkeypatch.setattr(api_main.model_service, "preload", _fake_preload, raising=False)
+
+    with TestClient(api_main.app):
+        pass
+
+    assert calls["count"] == 0
