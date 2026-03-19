@@ -6,8 +6,15 @@
 		// Sets the run context to one level up instead of the .devcontainer folder.
 		"context": "..",
 		// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-		"dockerfile": "../Dockerfile"
-	}
+		"dockerfile": "../Dockerfile",
+		// Build the development stage from the local Dockerfile.
+		"target": "dev"
+	},
+	// Expose all host GPUs inside the dev container.
+	"runArgs": [
+		"--gpus",
+		"all"
+	]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
