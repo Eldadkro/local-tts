@@ -1,0 +1,46 @@
+services:
+  prod:
+    build:
+      context: .
+      target: prod
+    environment:
+      TTS_DEVICE_MODE: ${TTS_DEVICE_MODE:-cpu}
+      HF_MODEL_ID: ${HF_MODEL_ID:-Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice}
+      HF_HOME: /app/model
+      PRELOAD_MODEL_ON_STARTUP: ${PRELOAD_MODEL_ON_STARTUP:-1}
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./model:/app/model
+
+  dev:
+    build:
+      context: .
+      target: dev
+    command: ["sleep", "infinity"]
+    environment:
+      TTS_DEVICE_MODE: ${TTS_DEVICE_MODE:-cpu}
+      HF_MODEL_ID: ${HF_MODEL_ID:-Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice}
+      HF_HOME: /app/model
+      PRELOAD_MODEL_ON_STARTUP: ${PRELOAD_MODEL_ON_STARTUP:-1}
+    ports:
+      - "8501:8501"
+      - "8000:8000"
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app
+      - ./model:/app/model
+
+  warm-model:
+    build:
+      context: .
+      target: prod
+    command: ["python", "-c", "from app.api.services.model_service import ModelService; ModelService().preload()"]
+    environment:
+      TTS_DEVICE_MODE: ${TTS_DEVICE_MODE:-cpu}
+      HF_MODEL_ID: ${HF_MODEL_ID:-Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice}
+      HF_HOME: /app/model
+      PRELOAD_MODEL_ON_STARTUP: "0"
+    volumes:
+      - ./model:/app/model
