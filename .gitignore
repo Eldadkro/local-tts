@@ -12,3 +12,6 @@ __pycache__/
 .venv/
 model/
 out/test.wav
+uv.lock
+
+# 

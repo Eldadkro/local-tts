@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import soundfile as sf
@@ -64,11 +65,21 @@ class ModelService:
             raise RuntimeError("MPS device requested but not available")
         if self.device == "gpu":
             raise RuntimeError("GPU device requested but CUDA is not available")
-        raise RuntimeError(f"No runtime candidates available for device mode: {self.device}")
+        raise RuntimeError(
+            f"No runtime candidates available for device mode: {self.device}"
+        )
 
     def _ensure_pipeline(self) -> None:
         if self._pipeline is None:
             self._pipeline = self._load_pipeline()
+
+    def _resolve_model_source(self) -> tuple[str, dict[str, str]]:
+        model_dir = Path("model").resolve()
+        if model_dir.is_dir() and any(model_dir.iterdir()):
+            return str(model_dir), {}
+
+        model_dir.mkdir(parents=True, exist_ok=True)
+        return self.model_id, {"cache_dir": str(model_dir)}
 
     def _load_pipeline(self):
         from qwen_tts import Qwen3TTSModel
@@ -76,18 +87,23 @@ class ModelService:
         if self.hf_home:
             os.environ["HF_HOME"] = self.hf_home
 
+        model_ref, model_kwargs = self._resolve_model_source()
+
         last_error: Exception | None = None
         for runtime_device, runtime_dtype in self._runtime_candidates():
             try:
                 return Qwen3TTSModel.from_pretrained(
-                    self.model_id,
+                    model_ref,
                     device_map=runtime_device,
                     dtype=runtime_dtype,
+                    **model_kwargs,
                 )
             except Exception as exc:  # pragma: no cover - backend dependent
                 last_error = exc
 
-        raise RuntimeError("Unable to load model on any runtime candidate") from last_error
+        raise RuntimeError(
+            "Unable to load model on any runtime candidate"
+        ) from last_error
 
     def _run_inference_with_timeout(self, text: str, voice_id: str):
         if self._pipeline is None:
@@ -116,7 +132,9 @@ class ModelService:
     def synthesize(self, text: str, voice_id: str) -> bytes:
         try:
             self._ensure_pipeline()
-            wavs, sample_rate = self._run_inference_with_timeout(text=text, voice_id=voice_id)
+            wavs, sample_rate = self._run_inference_with_timeout(
+                text=text, voice_id=voice_id
+            )
             if not wavs:
                 raise RuntimeError("Model did not return audio samples")
 
